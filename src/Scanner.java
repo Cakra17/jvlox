@@ -1,11 +1,11 @@
-package main.java;
+package src;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static main.java.TokenType.*;
+import static src.TokenType.*;
 
 class Scanner {
     private final String source;
@@ -85,6 +85,7 @@ class Scanner {
                 } else {
                     addToken(SLASH);
                 }
+		break;
             case ' ':
             case '\r':
             case '\t':

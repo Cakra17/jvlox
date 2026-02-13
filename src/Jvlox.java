@@ -1,4 +1,4 @@
-package main.java;
+package src;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,7 +41,7 @@ public class Jvlox {
         }
     }
     private static void run(String content) {
-        Scanner scanner = new main.java.Scanner(content);
+        Scanner scanner = new Scanner(content);
          List<Token> tokens=  scanner.scanTokens();
 
         for (Token token: tokens) {

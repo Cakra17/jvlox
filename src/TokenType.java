@@ -1,4 +1,4 @@
-package main.java;
+package src;
 
 enum TokenType {
     // Single-character tokens.

@@ -1,4 +1,4 @@
-package main.java;
+package src;
 
 class Token{
     private final TokenType type;
