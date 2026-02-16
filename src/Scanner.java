@@ -53,7 +53,6 @@ class Scanner {
         return current >= source.length();
     }
 
-
     private void scanToken() {
         char c = next();
         switch (c) {
@@ -100,7 +99,7 @@ class Scanner {
                 if (isDigit(c)) {
                     checkNumber();
                 } else if (isAlpha(c)) {
-                   checkIdentifier();
+                    checkIdentifier();
                 } else {
                     Jvlox.error(line, "Unexpected character.");
                 }

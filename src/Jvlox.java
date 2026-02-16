@@ -31,7 +31,7 @@ public class Jvlox {
         BufferedReader reader = new BufferedReader(input);
 
         for (;;) {
-            System.out.println("> ");
+            System.out.print("> ");
             String line = reader.readLine();
 
             if (line == null) break;
@@ -42,7 +42,7 @@ public class Jvlox {
     }
     private static void run(String content) {
         Scanner scanner = new Scanner(content);
-         List<Token> tokens=  scanner.scanTokens();
+        List<Token> tokens=  scanner.scanTokens();
 
         for (Token token: tokens) {
             System.out.println(token);
