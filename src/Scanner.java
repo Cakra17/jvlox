@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import static src.TokenType.*;
 
@@ -81,6 +82,27 @@ class Scanner {
             case '/':
                 if (match('/')) {
                     while (peek() != '\n' && !isAtEnd()) next();
+                } else if (match('*')) {
+                    Stack<String> st = new Stack<>();
+                    st.push("COMMENT");
+                    while (!st.isEmpty()) {
+                        if (peek() == '/' && peekNext() == '*') {
+                            st.push("COMMENT");
+                            next(); next();
+                        } else if (peek() == '*' && peekNext() == '/') {
+                            st.pop();
+                            next(); next();
+                            break;
+                        } 
+
+                        if (isAtEnd()) {
+                            Jvlox.error(line, "Unterminated multi-line comment");
+                            break;
+                        }
+
+                        if (peek() == '\n') line++;
+                        next();
+                    }
                 } else {
                     addToken(SLASH);
                 }
