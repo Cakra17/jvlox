@@ -2,28 +2,42 @@ package src;
 
 import java.util.List;
 
+import src.Jvlox;
+
 /**
  * Recursive decent parser
  * 
- * this is top-down level parser that because it start from the outermost 
+ * this is top-down level parser that because it start from the outermost
  * rule which is expression into nested subexpression.
  * 
- *  hierarchy of grammar rule (top to down)
- *  1. expression
- *  2. comparison
- *  3. term (addition and subtraction)
- *  4. factor (multiplication and division)
- *  5. unary (negate, negative)
- *  6. primary (parenthesis, number, string, boolean, nil, variable)
+ * hierarchy of grammar rule (top to down)
+ * 1. expression
+ * 2. comparison
+ * 3. term (addition and subtraction)
+ * 4. factor (multiplication and division)
+ * 5. unary (negate, negative)
+ * 6. primary (parenthesis, number, string, boolean, nil, variable)
  * 
  * 
  */
+
 class Parser {
+  private static class ParseError extends RuntimeException {
+  }
+
   private final List<Token> tokens;
   private int current = 0;
 
   Parser(List<Token> tokens) {
     this.tokens = tokens;
+  }
+
+  Expr parse() {
+    try {
+      return expression();
+    } catch (ParseError e) {
+      return null;
+    }
   }
 
   private Expr expression() {
@@ -33,7 +47,7 @@ class Parser {
   private Expr equality() {
     Expr expr = comparison();
 
-    while(match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+    while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
       Token operator = previous();
       Expr right = comparison();
       expr = new Expr.Binary(expr, operator, right);
@@ -82,9 +96,12 @@ class Parser {
   }
 
   private Expr primary() {
-    if (match(TokenType.TRUE)) return new Expr.Literal(true);
-    if (match(TokenType.FALSE)) return new Expr.Literal(false);
-    if (match(TokenType.NIL)) return new Expr.Literal(null);
+    if (match(TokenType.TRUE))
+      return new Expr.Literal(true);
+    if (match(TokenType.FALSE))
+      return new Expr.Literal(false);
+    if (match(TokenType.NIL))
+      return new Expr.Literal(null);
 
     if (match(TokenType.NUMBER, TokenType.STRING)) {
       return new Expr.Literal(previous().literal);
@@ -95,21 +112,51 @@ class Parser {
       consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
       return new Expr.Grouping(expr);
     }
+
+    throw error(peek(), "Expect expression.");
   }
 
   private Token consume(TokenType type, String message) {
-    if (check(type)) return advance();
-    return error(peek(), message);
+    if (check(type))
+      return advance();
+    throw error(peek(), message);
   }
 
+  private ParseError error(Token token, String message) {
+    Jvlox.error(token, message);
+    return new ParseError();
+  }
 
+  private void syncronize() {
+    advance();
+
+    while (!isAtEnd()) {
+      if (previous().type == TokenType.SEMICOLON)
+        return;
+
+      switch (peek().type) {
+        case CLASS:
+        case FUN:
+        case FOR:
+        case VAR:
+        case IF:
+        case WHILE:
+        case PRINT:
+        case RETURN:
+          return;
+      }
+
+      advance();
+    }
+  }
 
   private Token previous() {
     return tokens.get(current - 1);
   }
 
   private Token advance() {
-    if (!isAtEnd()) current++;
+    if (!isAtEnd())
+      current++;
     return previous();
   }
 
@@ -118,7 +165,8 @@ class Parser {
   }
 
   private boolean check(TokenType type) {
-    if (isAtEnd()) return false;
+    if (isAtEnd())
+      return false;
     return peek().type == type;
   }
 
@@ -126,8 +174,8 @@ class Parser {
     return peek().type == TokenType.EOF;
   }
 
-  private boolean match(TokenType ...types) {
-    for (TokenType type: types) {
+  private boolean match(TokenType... types) {
+    for (TokenType type : types) {
       if (check(type)) {
         advance();
         return true;
