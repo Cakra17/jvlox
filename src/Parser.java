@@ -45,11 +45,31 @@ class Parser {
   }
 
   private Expr comma() {
-    Expr expr = equality();
+    Expr expr = ternary();
+
     while (match(TokenType.COMMA)) {
       Token operator = previous();
-      Expr right = equality();
+      Expr right = ternary();
       expr = new Expr.Binary(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr ternary() {
+    Expr expr = equality();
+
+    if (match(TokenType.QUESTION)) {
+      Token question = previous();
+      Expr thenExpr = equality();
+
+      if (match(TokenType.COLON)) {
+        Token colon = previous();
+        Expr elseExpr = ternary();
+        expr = new Expr.Ternary(question, expr, thenExpr, colon, elseExpr);
+      } else {
+        throw error(peek(), "Expected : on ternary operation");
+      }
     }
 
     return expr;
