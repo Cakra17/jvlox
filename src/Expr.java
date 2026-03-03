@@ -8,6 +8,7 @@ abstract class Expr {
     T visitGroupingExpr(Grouping expr);
     T visitLiteralExpr(Literal expr);
     T visitUnaryExpr(Unary expr);
+    T visitTernaryExpr(Ternary expr);
   }
 
   static class Binary extends Expr {
@@ -63,6 +64,26 @@ abstract class Expr {
 
     final Token operator;
     final Expr right;
+  }
+  static class Ternary extends Expr {
+    Ternary(Token question, Expr condition, Expr thenBranch, Token colon, Expr elseBranch) {
+      this.question = question;
+      this.condition = condition;
+      this.thenBranch = thenBranch;
+      this.colon = colon;
+      this.elseBranch = elseBranch;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitTernaryExpr(this);
+    }
+
+    final Token question;
+    final Expr condition;
+    final Expr thenBranch;
+    final Token colon;
+    final Expr elseBranch;
   }
 
   abstract <T> T accept(Visitor<T> visitor);

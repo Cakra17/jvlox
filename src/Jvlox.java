@@ -8,24 +8,29 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+
 public class Jvlox {
     static boolean hadError = false;
+
     public static void main(String[] args) throws IOException {
-       if (args.length > 1) {
-           System.out.println("Usage: jvlox [script]");
-           System.exit(69);
-       } else if (args.length == 1) {
-          runFile(args[0]);
-       } else {
-          runPrompt();
-       }
+        if (args.length > 1) {
+            System.out.println("Usage: jvlox [script]");
+            System.exit(69);
+        } else if (args.length == 1) {
+            runFile(args[0]);
+        } else {
+            runPrompt();
+        }
     }
+
     private static void runFile(String filepath) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(filepath));
         run(new String(bytes, Charset.defaultCharset()));
 
-        if (hadError) System.exit(69);
+        if (hadError)
+            System.exit(69);
     }
+
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
@@ -34,27 +39,59 @@ public class Jvlox {
             System.out.print("> ");
             String line = reader.readLine();
 
-            if (line == null || line.equals("exit")) break;
+            if (line == null || line.equals("exit"))
+                break;
 
             run(line);
             hadError = false;
         }
     }
+
     private static void run(String content) {
         Scanner scanner = new Scanner(content);
-        List<Token> tokens=  scanner.scanTokens();
+        List<Token> tokens = scanner.scanTokens();
 
-        for (Token token: tokens) {
-            System.out.println(token);
-        }
+        Parser parser = new Parser(tokens);
+        Expr expr = parser.parse();
+
+        if (hadError)
+            return;
+
+        System.err.println(new AstPrinter().print(expr));
     }
+
     static void error(int line, String message) {
         report(line, "", message);
     }
+
+    static void error(Token token, String message) {
+        switch (token.type) {
+            case EOF:
+                report(token.line, "at end", message);   
+                break;
+            case EQUAL_EQUAL:
+            case BANG_EQUAL:
+            case COMMA:
+            case GREATER:
+            case GREATER_EQUAL:
+            case LESS:
+            case LESS_EQUAL:
+            case PLUS:
+            case MINUS:
+            case STAR:
+            case SLASH:
+                report(token.line, "before '" + token.lexeme + "'", message);
+                break;
+            default:
+                report(token.line, "at '" + token.lexeme + "'", message);
+                break;
+        }
+    }
+
     private static void report(int line, String where, String message) {
         System.out.println(
-            "[line " + line + "] Error " + where + ": " + message
-        );
+                "[line " + line + "] Error " + where + ": " + message);
         hadError = true;
     }
+
 }

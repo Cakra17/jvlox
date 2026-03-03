@@ -1,0 +1,244 @@
+package src;
+
+import java.util.List;
+
+import src.Jvlox;
+
+/**
+ * Recursive decent parser
+ * 
+ * this is top-down level parser that because it start from the outermost
+ * rule which is expression into nested subexpression.
+ * 
+ * hierarchy of grammar rule (top to down)
+ * 1. expression
+ * 2. comparison
+ * 3. term (addition and subtraction)
+ * 4. factor (multiplication and division)
+ * 5. unary (negate, negative)
+ * 6. primary (parenthesis, number, string, boolean, nil, variable)
+ * 
+ * 
+ */
+
+class Parser {
+  private static class ParseError extends RuntimeException {
+  }
+
+  private final List<Token> tokens;
+  private int current = 0;
+
+  Parser(List<Token> tokens) {
+    this.tokens = tokens;
+  }
+
+  Expr parse() {
+    try {
+      return expression();
+    } catch (ParseError e) {
+      return null;
+    }
+  }
+
+  private Expr expression() {
+    return comma();
+  }
+
+  private Expr comma() {
+    if (match(TokenType.COMMA)) {
+      throw error(previous(), "Left operand is missing");
+    }
+
+    Expr expr = ternary();
+
+    while (match(TokenType.COMMA)) {
+      Token operator = previous();
+      Expr right = ternary();
+      expr = new Expr.Binary(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr ternary() {
+    Expr expr = equality();
+
+    if (match(TokenType.QUESTION)) {
+      Token question = previous();
+      Expr thenExpr = equality();
+
+      if (match(TokenType.COLON)) {
+        Token colon = previous();
+        Expr elseExpr = ternary();
+        expr = new Expr.Ternary(question, expr, thenExpr, colon, elseExpr);
+      } else {
+        throw error(peek(), "Expected : on ternary operation");
+      }
+    }
+
+    return expr;
+  }
+
+  private Expr equality() {
+    if (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+      throw error(previous(), "Left operand is missing");
+    }
+
+    Expr expr = comparison();
+    
+    while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+      Token operator = previous();
+      Expr right = comparison();
+      expr = new Expr.Binary(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr comparison() {
+    if (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+      throw error(previous(), "Left operand is missing");
+    }
+
+    Expr expr = term();
+
+    while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+      Token operator = previous();
+      Expr right = term();
+      expr = new Expr.Binary(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr term() {
+    if (match(TokenType.PLUS, TokenType.MINUS)) {
+      throw error(previous(), "Left operand is missing");
+    }
+
+    Expr expr = factor();
+
+    while (match(TokenType.PLUS, TokenType.MINUS)) {
+      Token operator = previous();
+      Expr right = term();
+      expr = new Expr.Binary(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr factor() {
+    if (match(TokenType.SLASH, TokenType.STAR)) {
+      throw error(previous(), "Left operand is missing");
+    }
+
+    Expr expr = unary();
+
+    while (match(TokenType.SLASH, TokenType.STAR)) {
+      Token operator = previous();
+      Expr right = term();
+      expr = new Expr.Binary(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr unary() {
+    if (match(TokenType.BANG, TokenType.MINUS)) {
+      Token operator = previous();
+      Expr right = unary();
+      return new Expr.Unary(operator, right);
+    }
+
+    return primary();
+  }
+
+  private Expr primary() {
+    if (match(TokenType.TRUE))
+      return new Expr.Literal(true);
+    if (match(TokenType.FALSE))
+      return new Expr.Literal(false);
+    if (match(TokenType.NIL))
+      return new Expr.Literal(null);
+
+    if (match(TokenType.NUMBER, TokenType.STRING)) {
+      return new Expr.Literal(previous().literal);
+    }
+
+    if (match(TokenType.LEFT_PAREN)) {
+      Expr expr = expression();
+      consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
+      return new Expr.Grouping(expr);
+    }
+
+    throw error(peek(), "Expect expression.");
+  }
+
+  private Token consume(TokenType type, String message) {
+    if (check(type))
+      return advance();
+    throw error(peek(), message);
+  }
+
+  private ParseError error(Token token, String message) {
+    Jvlox.error(token, message);
+    return new ParseError();
+  }
+
+  private void syncronize() {
+    advance();
+
+    while (!isAtEnd()) {
+      if (previous().type == TokenType.SEMICOLON)
+        return;
+
+      switch (peek().type) {
+        case CLASS:
+        case FUN:
+        case FOR:
+        case VAR:
+        case IF:
+        case WHILE:
+        case PRINT:
+        case RETURN:
+          return;
+      }
+
+      advance();
+    }
+  }
+
+  private Token previous() {
+    return tokens.get(current - 1);
+  }
+
+  private Token advance() {
+    if (!isAtEnd())
+      current++;
+    return previous();
+  }
+
+  private Token peek() {
+    return tokens.get(current);
+  }
+
+  private boolean check(TokenType type) {
+    if (isAtEnd())
+      return false;
+    return peek().type == type;
+  }
+
+  private boolean isAtEnd() {
+    return peek().type == TokenType.EOF;
+  }
+
+  private boolean match(TokenType... types) {
+    for (TokenType type : types) {
+      if (check(type)) {
+        advance();
+        return true;
+      }
+    }
+    return false;
+  }
+}
