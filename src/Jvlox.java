@@ -65,10 +65,27 @@ public class Jvlox {
     }
 
     static void error(Token token, String message) {
-        if (token.type == TokenType.EOF)
-            report(token.line, "at end", message);
-        else
-            report(token.line, "at '" + token.lexeme + "'", message);
+        switch (token.type) {
+            case EOF:
+                report(token.line, "at end", message);   
+                break;
+            case EQUAL_EQUAL:
+            case BANG_EQUAL:
+            case COMMA:
+            case GREATER:
+            case GREATER_EQUAL:
+            case LESS:
+            case LESS_EQUAL:
+            case PLUS:
+            case MINUS:
+            case STAR:
+            case SLASH:
+                report(token.line, "before '" + token.lexeme + "'", message);
+                break;
+            default:
+                report(token.line, "at '" + token.lexeme + "'", message);
+                break;
+        }
     }
 
     private static void report(int line, String where, String message) {

@@ -45,6 +45,10 @@ class Parser {
   }
 
   private Expr comma() {
+    if (match(TokenType.COMMA)) {
+      throw error(previous(), "Left operand is missing");
+    }
+
     Expr expr = ternary();
 
     while (match(TokenType.COMMA)) {
@@ -76,8 +80,12 @@ class Parser {
   }
 
   private Expr equality() {
-    Expr expr = comparison();
+    if (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+      throw error(previous(), "Left operand is missing");
+    }
 
+    Expr expr = comparison();
+    
     while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
       Token operator = previous();
       Expr right = comparison();
@@ -88,32 +96,50 @@ class Parser {
   }
 
   private Expr comparison() {
+    if (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+      throw error(previous(), "Left operand is missing");
+    }
+
     Expr expr = term();
+
     while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
       Token operator = previous();
       Expr right = term();
       expr = new Expr.Binary(expr, operator, right);
     }
+
     return expr;
   }
 
   private Expr term() {
+    if (match(TokenType.PLUS, TokenType.MINUS)) {
+      throw error(previous(), "Left operand is missing");
+    }
+
     Expr expr = factor();
+
     while (match(TokenType.PLUS, TokenType.MINUS)) {
       Token operator = previous();
       Expr right = term();
       expr = new Expr.Binary(expr, operator, right);
     }
+
     return expr;
   }
 
   private Expr factor() {
+    if (match(TokenType.SLASH, TokenType.STAR)) {
+      throw error(previous(), "Left operand is missing");
+    }
+
     Expr expr = unary();
+
     while (match(TokenType.SLASH, TokenType.STAR)) {
       Token operator = previous();
       Expr right = term();
       expr = new Expr.Binary(expr, operator, right);
     }
+
     return expr;
   }
 
@@ -123,6 +149,7 @@ class Parser {
       Expr right = unary();
       return new Expr.Unary(operator, right);
     }
+
     return primary();
   }
 
