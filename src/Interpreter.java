@@ -96,7 +96,11 @@ class Interpreter implements Expr.Visitor<Object> {
 
     @Override
     public Object visitTernaryExpr(Expr.Ternary expr) {
-        return null;
+        Object left = evaluate(expr.thenBranch);
+        Object right = evaluate(expr.elseBranch);
+        boolean cond = isTruthy(evaluate(expr.condition));
+
+        return cond ? left : right;
     }
 
     private Object evaluate(Expr expr) {
