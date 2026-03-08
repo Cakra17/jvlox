@@ -8,9 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-
 public class Jvlox {
+    private static final Interpreter interpret = new Interpreter();
     static boolean hadError = false;
+    static boolean hadRuntimeError = false;
 
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
@@ -29,6 +30,8 @@ public class Jvlox {
 
         if (hadError)
             System.exit(69);
+        if (hadRuntimeError)
+            System.exit(70);
     }
 
     private static void runPrompt() throws IOException {
@@ -57,7 +60,8 @@ public class Jvlox {
         if (hadError)
             return;
 
-        System.err.println(new AstPrinter().print(expr));
+        // System.err.println(new AstPrinter().print(expr));
+        interpret.interpret(expr);
     }
 
     static void error(int line, String message) {
@@ -67,7 +71,7 @@ public class Jvlox {
     static void error(Token token, String message) {
         switch (token.type) {
             case EOF:
-                report(token.line, "at end", message);   
+                report(token.line, "at end", message);
                 break;
             case EQUAL_EQUAL:
             case BANG_EQUAL:
@@ -92,6 +96,12 @@ public class Jvlox {
         System.out.println(
                 "[line " + line + "] Error " + where + ": " + message);
         hadError = true;
+    }
+
+    static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() +
+                "\n[line " + error.token.line + "]");
+        hadRuntimeError = true;
     }
 
 }

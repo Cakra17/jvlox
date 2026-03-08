@@ -2,8 +2,6 @@ package src;
 
 import java.util.List;
 
-import src.Jvlox;
-
 /**
  * Recursive decent parser
  * 
@@ -85,7 +83,7 @@ class Parser {
     }
 
     Expr expr = comparison();
-    
+
     while (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
       Token operator = previous();
       Expr right = comparison();
@@ -112,7 +110,7 @@ class Parser {
   }
 
   private Expr term() {
-    if (match(TokenType.PLUS, TokenType.MINUS)) {
+    if (match(TokenType.PLUS)) {
       throw error(previous(), "Left operand is missing");
     }
 
@@ -120,7 +118,7 @@ class Parser {
 
     while (match(TokenType.PLUS, TokenType.MINUS)) {
       Token operator = previous();
-      Expr right = term();
+      Expr right = factor();
       expr = new Expr.Binary(expr, operator, right);
     }
 
@@ -136,7 +134,7 @@ class Parser {
 
     while (match(TokenType.SLASH, TokenType.STAR)) {
       Token operator = previous();
-      Expr right = term();
+      Expr right = unary();
       expr = new Expr.Binary(expr, operator, right);
     }
 
@@ -146,7 +144,7 @@ class Parser {
   private Expr unary() {
     if (match(TokenType.BANG, TokenType.MINUS)) {
       Token operator = previous();
-      Expr right = unary();
+      Expr right = primary();
       return new Expr.Unary(operator, right);
     }
 
