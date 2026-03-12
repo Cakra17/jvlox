@@ -1,5 +1,8 @@
 package src;
 
+import java.util.ArrayList;
+import java.util.List;
+
 class Interpreter implements Expr.Visitor<Object> {
     void interpret(Expr expr) {
         try {
@@ -42,15 +45,20 @@ class Interpreter implements Expr.Visitor<Object> {
                 return (double) left * (double) right;
             case SLASH:
                 checkNumberOperands(expr.operator, left, right);
+                if ((double) right == 0)
+                    throw new RuntimeError(expr.operator, "Cannot divide by zero");
                 return (double) left / (double) right;
             case PLUS:
-                checkNumberOperands(expr.operator, left, right);
+                checkMixOperands(expr.operator, left, right);
                 if (left instanceof Double && right instanceof Double)
                     return (double) left + (double) right;
                 if (left instanceof String && right instanceof String)
                     return (String) left + (String) right;
-                throw new RuntimeError(expr.operator, "Operand must be two numbers or two strings");
-
+                
+                if (left instanceof String && right instanceof Double)
+                    return (String) left + String.format("%.0f", right);
+                else if (left instanceof Double && right instanceof String)
+                    return String.format("%.0f", left) + (String) right;
         }
 
         return null;
@@ -92,6 +100,33 @@ class Interpreter implements Expr.Visitor<Object> {
         if (left instanceof Double && right instanceof Double)
             return;
         throw new RuntimeError(operator, "Operator must be numbers");
+    }
+
+    private void checkMixOperands(Token operator, Object left, Object right) {
+        if ((left instanceof Double || left instanceof String) &&
+            (right instanceof Double || right instanceof String))
+            return;
+        throw new RuntimeError(
+            operator, 
+            "Incorrect Type of operand for this operation, use either string or number"
+        );
+    }
+
+    private List<Double> getValues(Object left, Object right) {
+        List<Double> pair = new ArrayList<>();
+        if (left instanceof Double) {
+            pair.add((Double) left);
+        } else {
+            pair.add((double) String.valueOf(left).length());
+        }
+
+        if (right instanceof Double) {
+            pair.add((Double) right);
+        } else {
+            pair.add((double) String.valueOf(right).length());
+        }
+
+        return pair;
     }
 
     @Override
