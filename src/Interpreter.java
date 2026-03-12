@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Interpreter implements Expr.Visitor<Object> {
+    private List<Double> list;
+
     void interpret(Expr expr) {
         try {
             Object value = evaluate(expr);
@@ -25,17 +27,21 @@ class Interpreter implements Expr.Visitor<Object> {
                 return isEqual(left, right);
 
             case GREATER:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left > (double) right;
+                checkMixOperands(expr.operator, left, right);
+                list = getValues(left, right);
+                return list.get(0) > list.get(1);
             case GREATER_EQUAL:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left >= (double) right;
+                checkMixOperands(expr.operator, left, right);
+                list = getValues(left, right);
+                return list.get(0) >= list.get(1);
             case LESS:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left < (double) right;
+                checkMixOperands(expr.operator, left, right);
+                list = getValues(left, right);
+                return list.get(0) < list.get(1);
             case LESS_EQUAL:
-                checkNumberOperands(expr.operator, left, right);
-                return (double) left <= (double) right;
+                checkMixOperands(expr.operator, left, right);
+                list = getValues(left, right);
+                return list.get(0) <= list.get(1);
 
             case MINUS:
                 checkNumberOperands(expr.operator, left, right);
@@ -54,7 +60,7 @@ class Interpreter implements Expr.Visitor<Object> {
                     return (double) left + (double) right;
                 if (left instanceof String && right instanceof String)
                     return (String) left + (String) right;
-                
+
                 if (left instanceof String && right instanceof Double)
                     return (String) left + String.format("%.0f", right);
                 else if (left instanceof Double && right instanceof String)
@@ -104,12 +110,11 @@ class Interpreter implements Expr.Visitor<Object> {
 
     private void checkMixOperands(Token operator, Object left, Object right) {
         if ((left instanceof Double || left instanceof String) &&
-            (right instanceof Double || right instanceof String))
+                (right instanceof Double || right instanceof String))
             return;
         throw new RuntimeError(
-            operator, 
-            "Incorrect Type of operand for this operation, use either string or number"
-        );
+                operator,
+                "Incorrect Type of operand for this operation, use either string or number");
     }
 
     private List<Double> getValues(Object left, Object right) {
