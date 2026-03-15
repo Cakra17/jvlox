@@ -1,5 +1,6 @@
 package src;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,16 +31,36 @@ class Parser {
     this.tokens = tokens;
   }
 
-  Expr parse() {
-    try {
-      return expression();
-    } catch (ParseError e) {
-      return null;
+  List<Stmt> parse() {
+    List<Stmt> stmts = new ArrayList<>();
+
+    while (!isAtEnd()) {
+      stmts.add(statement());
     }
+
+    return stmts;
   }
 
   private Expr expression() {
     return comma();
+  }
+
+  private Stmt statement() {
+    if (match(TokenType.PRINT))
+      return printStatement();
+    return expressionStatement();
+  }
+
+  private Stmt printStatement() {
+    Expr expr = expression();
+    consume(TokenType.SEMICOLON, "Expect ';' after value");
+    return new Stmt.Print(expr);
+  }
+
+  private Stmt expressionStatement() {
+    Expr expr = expression();
+    consume(TokenType.SEMICOLON, "Expect ';' after value");
+    return new Stmt.Expression(expr);
   }
 
   private Expr comma() {

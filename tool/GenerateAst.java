@@ -20,6 +20,12 @@ public class GenerateAst {
             "Literal  : Object value",
             "Unary    : Token operator, Expr right",
             "Ternary  : Token question, Expr condition, Expr thenBranch, Token colon, Expr elseBranch"));
+
+    defineAst(outputDir, "Stmt",
+        Arrays.asList(
+            "Expression : Expr expression",
+            "Print      : Expr expression"));
+
   }
 
   private static void defineAst(

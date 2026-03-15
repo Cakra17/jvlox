@@ -55,13 +55,12 @@ public class Jvlox {
         List<Token> tokens = scanner.scanTokens();
 
         Parser parser = new Parser(tokens);
-        Expr expr = parser.parse();
+        List<Stmt> statements = parser.parse();
 
         if (hadError)
             return;
 
-        // System.err.println(new AstPrinter().print(expr));
-        interpret.interpret(expr);
+        interpret.interpret(statements);
     }
 
     static void error(int line, String message) {
