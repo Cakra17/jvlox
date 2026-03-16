@@ -42,7 +42,7 @@ class Parser {
   }
 
   private Expr expression() {
-    return comma();
+    return assignment();
   }
 
   private Stmt declaration() {
@@ -81,6 +81,24 @@ class Parser {
     Expr expr = expression();
     consume(TokenType.SEMICOLON, "Expect ';' after value");
     return new Stmt.Expression(expr);
+  }
+
+  private Expr assignment() {
+    Expr expr = comma();
+
+    if (match(TokenType.EQUAL)) {
+      Token equal = previous();
+      Expr left = assignment();
+
+      if (expr instanceof Expr.Variable) {
+        Token name = ((Expr.Variable) expr).name;
+        return new Expr.Assign(name, left);
+      }
+
+      error(equal, "Invalid assignment target.");
+    }
+
+    return expr;
   }
 
   private Expr comma() {
