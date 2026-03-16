@@ -35,7 +35,7 @@ class Parser {
     List<Stmt> stmts = new ArrayList<>();
 
     while (!isAtEnd()) {
-      stmts.add(statement());
+      stmts.add(declaration());
     }
 
     return stmts;
@@ -43,6 +43,26 @@ class Parser {
 
   private Expr expression() {
     return comma();
+  }
+
+  private Stmt declaration() {
+    try {
+      if (match(TokenType.VAR))
+        return varDeclaration();
+      return statement();
+    } catch (ParseError e) {
+      syncronize();
+      return null;
+    }
+  }
+
+  private Stmt varDeclaration() {
+    Token name = consume(TokenType.IDENTIFIER, "Expect variable name.");
+    Expr expr = null;
+    if (match(TokenType.EQUAL))
+      expr = expression();
+    consume(TokenType.SEMICOLON, "Expect ; after variable declaration");
+    return new Stmt.Var(name, expr);
   }
 
   private Stmt statement() {
@@ -182,6 +202,10 @@ class Parser {
 
     if (match(TokenType.NUMBER, TokenType.STRING)) {
       return new Expr.Literal(previous().literal);
+    }
+
+    if (match(TokenType.IDENTIFIER)) {
+      return new Expr.Variable(previous());
     }
 
     if (match(TokenType.LEFT_PAREN)) {
