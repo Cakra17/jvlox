@@ -149,9 +149,15 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return cond ? left : right;
     }
 
+    /*
+     * TODO: think another alternative solution for challange 2
+     */
     @Override
     public Object visitVariableExpr(Expr.Variable expr) {
-        return environment.get(expr.name);
+        Object value = environment.get(expr.name);
+        if (value == null)
+            throw new RuntimeError(expr.name, "Variable uninitialized");
+        return value;
     }
 
     @Override
