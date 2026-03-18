@@ -1,5 +1,6 @@
 package src;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,16 +31,86 @@ class Parser {
     this.tokens = tokens;
   }
 
-  Expr parse() {
+  List<Stmt> parse() {
+    List<Stmt> stmts = new ArrayList<>();
+
+    while (!isAtEnd()) {
+      stmts.add(declaration());
+    }
+
+    return stmts;
+  }
+
+  private Expr expression() {
+    return assignment();
+  }
+
+  private Stmt declaration() {
     try {
-      return expression();
+      if (match(TokenType.VAR))
+        return varDeclaration();
+      return statement();
     } catch (ParseError e) {
+      syncronize();
       return null;
     }
   }
 
-  private Expr expression() {
-    return comma();
+  private Stmt varDeclaration() {
+    Token name = consume(TokenType.IDENTIFIER, "Expect variable name.");
+    Expr expr = null;
+    if (match(TokenType.EQUAL))
+      expr = expression();
+    consume(TokenType.SEMICOLON, "Expect ; after variable declaration");
+    return new Stmt.Var(name, expr);
+  }
+
+  private Stmt statement() {
+    if (match(TokenType.PRINT))
+      return printStatement();
+
+    if (match(TokenType.LEFT_BRACE))
+      return new Stmt.Block(block());
+    return expressionStatement();
+  }
+
+  private List<Stmt> block() {
+    List<Stmt> stmts = new ArrayList<>();
+    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+      stmts.add(declaration());
+    }
+    consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+    return stmts;
+  }
+
+  private Stmt printStatement() {
+    Expr expr = expression();
+    consume(TokenType.SEMICOLON, "Expect ';' after value");
+    return new Stmt.Print(expr);
+  }
+
+  private Stmt expressionStatement() {
+    Expr expr = expression();
+    consume(TokenType.SEMICOLON, "Expect ';' after value");
+    return new Stmt.Expression(expr);
+  }
+
+  private Expr assignment() {
+    Expr expr = comma();
+
+    if (match(TokenType.EQUAL)) {
+      Token equal = previous();
+      Expr left = assignment();
+
+      if (expr instanceof Expr.Variable) {
+        Token name = ((Expr.Variable) expr).name;
+        return new Expr.Assign(name, left);
+      }
+
+      error(equal, "Invalid assignment target.");
+    }
+
+    return expr;
   }
 
   private Expr comma() {
@@ -161,6 +232,10 @@ class Parser {
 
     if (match(TokenType.NUMBER, TokenType.STRING)) {
       return new Expr.Literal(previous().literal);
+    }
+
+    if (match(TokenType.IDENTIFIER)) {
+      return new Expr.Variable(previous());
     }
 
     if (match(TokenType.LEFT_PAREN)) {

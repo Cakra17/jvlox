@@ -3,13 +3,19 @@ package src;
 import java.util.ArrayList;
 import java.util.List;
 
-class Interpreter implements Expr.Visitor<Object> {
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private List<Double> list;
+    private Environment environment = new Environment();
+    private boolean isREPL;
 
-    void interpret(Expr expr) {
+    Interpreter(boolean isREPL) {
+        this.isREPL = isREPL;
+    }
+
+    void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expr);
-            System.out.println(stringify(value));
+            for (Stmt statement : statements)
+                execute(statement);
         } catch (RuntimeError e) {
             Jvlox.runtimeError(e);
         }
@@ -143,8 +149,75 @@ class Interpreter implements Expr.Visitor<Object> {
         return cond ? left : right;
     }
 
+    /*
+     * TODO: think another alternative solution for challange 2
+     */
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) {
+        Object value = environment.get(expr.name);
+        if (value == null)
+            throw new RuntimeError(expr.name, "Variable uninitialized");
+        return value;
+    }
+
+    @Override
+    public Object visitAssignExpr(Expr.Assign expr) {
+        Object value = evaluate(expr.value);
+        environment.assign(expr.name, value);
+        return value;
+    }
+
     private Object evaluate(Expr expr) {
         return expr.accept(this);
+    }
+
+    private Void execute(Stmt stmt) {
+        return stmt.accept(this);
+    }
+
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        Object value = evaluate(stmt.expression);
+        if (isREPL)
+            System.out.println(stringify(value));
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+        Object value = null;
+        if (stmt.initializer != null) {
+            value = evaluate(stmt.initializer);
+        }
+
+        environment.define(stmt.name.lexeme, value);
+        return null;
+    }
+
+    private void executeBlock(List<Stmt> stmts, Environment env) {
+        Environment previous = this.environment;
+        try {
+            this.environment = env;
+
+            for (Stmt statement : stmts) {
+                execute(statement);
+            }
+        } finally {
+            this.environment = previous;
+        }
     }
 
     private boolean isTruthy(Object obj) {

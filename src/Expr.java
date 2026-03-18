@@ -4,13 +4,29 @@ import java.util.List;
 
 abstract class Expr {
   interface Visitor <T> {
+    T visitAssignExpr(Assign expr);
     T visitBinaryExpr(Binary expr);
     T visitGroupingExpr(Grouping expr);
     T visitLiteralExpr(Literal expr);
     T visitUnaryExpr(Unary expr);
     T visitTernaryExpr(Ternary expr);
+    T visitVariableExpr(Variable expr);
   }
 
+  static class Assign extends Expr {
+    Assign(Token name, Expr value) {
+      this.name = name;
+      this.value = value;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitAssignExpr(this);
+    }
+
+    final Token name;
+    final Expr value;
+  }
   static class Binary extends Expr {
     Binary(Expr left, Token operator, Expr right) {
       this.left = left;
@@ -84,6 +100,18 @@ abstract class Expr {
     final Expr thenBranch;
     final Token colon;
     final Expr elseBranch;
+  }
+  static class Variable extends Expr {
+    Variable(Token name) {
+      this.name = name;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitVariableExpr(this);
+    }
+
+    final Token name;
   }
 
   abstract <T> T accept(Visitor<T> visitor);
