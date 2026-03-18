@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Jvlox {
-    private static final Interpreter interpret = new Interpreter();
+    private static Interpreter interpret;
     static boolean hadError = false;
     static boolean hadRuntimeError = false;
 
@@ -25,6 +25,7 @@ public class Jvlox {
     }
 
     private static void runFile(String filepath) throws IOException {
+        interpret = new Interpreter(false);
         byte[] bytes = Files.readAllBytes(Paths.get(filepath));
         run(new String(bytes, Charset.defaultCharset()));
 
@@ -35,6 +36,7 @@ public class Jvlox {
     }
 
     private static void runPrompt() throws IOException {
+        interpret = new Interpreter(true);
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
