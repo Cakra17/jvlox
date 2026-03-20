@@ -9,6 +9,7 @@ abstract class Stmt {
     T visitIfStmt(If stmt);
     T visitPrintStmt(Print stmt);
     T visitVarStmt(Var stmt);
+    T visitWhileStmt(While stmt);
   }
 
   static class Block extends Stmt {
@@ -76,6 +77,20 @@ abstract class Stmt {
 
     final Token name;
     final Expr initializer;
+  }
+  static class While extends Stmt {
+    While(Expr condition, Stmt body) {
+      this.condition = condition;
+      this.body = body;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitWhileStmt(this);
+    }
+
+    final Expr condition;
+    final Stmt body;
   }
 
   abstract <T> T accept(Visitor<T> visitor);
