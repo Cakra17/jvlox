@@ -1,0 +1,7 @@
+var a = 9;
+
+if (a == 10) {
+  print "Benar";
+} else {
+  print "Salah";
+}

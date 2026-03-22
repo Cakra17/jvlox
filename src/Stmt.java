@@ -6,8 +6,11 @@ abstract class Stmt {
   interface Visitor <T> {
     T visitBlockStmt(Block stmt);
     T visitExpressionStmt(Expression stmt);
+    T visitIfStmt(If stmt);
     T visitPrintStmt(Print stmt);
     T visitVarStmt(Var stmt);
+    T visitWhileStmt(While stmt);
+    T visitBreakStmt(Break stmt);
   }
 
   static class Block extends Stmt {
@@ -34,6 +37,22 @@ abstract class Stmt {
 
     final Expr expression;
   }
+  static class If extends Stmt {
+    If(Expr condition, Stmt thenBranch, Stmt elseBranch) {
+      this.condition = condition;
+      this.thenBranch = thenBranch;
+      this.elseBranch = elseBranch;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitIfStmt(this);
+    }
+
+    final Expr condition;
+    final Stmt thenBranch;
+    final Stmt elseBranch;
+  }
   static class Print extends Stmt {
     Print(Expr expression) {
       this.expression = expression;
@@ -59,6 +78,32 @@ abstract class Stmt {
 
     final Token name;
     final Expr initializer;
+  }
+  static class While extends Stmt {
+    While(Expr condition, Stmt body) {
+      this.condition = condition;
+      this.body = body;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitWhileStmt(this);
+    }
+
+    final Expr condition;
+    final Stmt body;
+  }
+  static class Break extends Stmt {
+    Break(Object value) {
+      this.value = value;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitBreakStmt(this);
+    }
+
+    final Object value;
   }
 
   abstract <T> T accept(Visitor<T> visitor);

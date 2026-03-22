@@ -8,6 +8,7 @@ abstract class Expr {
     T visitBinaryExpr(Binary expr);
     T visitGroupingExpr(Grouping expr);
     T visitLiteralExpr(Literal expr);
+    T visitLogicalExpr(Logical expr);
     T visitUnaryExpr(Unary expr);
     T visitTernaryExpr(Ternary expr);
     T visitVariableExpr(Variable expr);
@@ -66,6 +67,22 @@ abstract class Expr {
     }
 
     final Object value;
+  }
+  static class Logical extends Expr {
+    Logical(Expr left, Token operator, Expr right) {
+      this.left = left;
+      this.operator = operator;
+      this.right = right;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitLogicalExpr(this);
+    }
+
+    final Expr left;
+    final Token operator;
+    final Expr right;
   }
   static class Unary extends Expr {
     Unary(Token operator, Expr right) {
