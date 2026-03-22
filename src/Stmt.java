@@ -10,6 +10,7 @@ abstract class Stmt {
     T visitPrintStmt(Print stmt);
     T visitVarStmt(Var stmt);
     T visitWhileStmt(While stmt);
+    T visitBreakStmt(Break stmt);
   }
 
   static class Block extends Stmt {
@@ -91,6 +92,18 @@ abstract class Stmt {
 
     final Expr condition;
     final Stmt body;
+  }
+  static class Break extends Stmt {
+    Break(Object value) {
+      this.value = value;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitBreakStmt(this);
+    }
+
+    final Object value;
   }
 
   abstract <T> T accept(Visitor<T> visitor);

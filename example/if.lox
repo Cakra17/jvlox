@@ -1,6 +1,6 @@
-var a = 10;
+var a = 9;
 
-if (a >= 10) {
+if (a == 10) {
   print "Benar";
 } else {
   print "Salah";
