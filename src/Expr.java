@@ -10,6 +10,7 @@ abstract class Expr {
     T visitLiteralExpr(Literal expr);
     T visitLogicalExpr(Logical expr);
     T visitUnaryExpr(Unary expr);
+    T visitCallExpr(Call expr);
     T visitTernaryExpr(Ternary expr);
     T visitVariableExpr(Variable expr);
   }
@@ -97,6 +98,22 @@ abstract class Expr {
 
     final Token operator;
     final Expr right;
+  }
+  static class Call extends Expr {
+    Call(Expr callee, Token paren, List<Expr> arguments) {
+      this.callee = callee;
+      this.paren = paren;
+      this.arguments = arguments;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitCallExpr(this);
+    }
+
+    final Expr callee;
+    final Token paren;
+    final List<Expr> arguments;
   }
   static class Ternary extends Expr {
     Ternary(Token question, Expr condition, Expr thenBranch, Token colon, Expr elseBranch) {
