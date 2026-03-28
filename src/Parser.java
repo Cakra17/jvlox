@@ -29,6 +29,7 @@ class Parser {
   private final List<Token> tokens;
   private int current = 0;
   private boolean insideLoop = false;
+  private boolean allowCommaOp = true;
 
   Parser(List<Token> tokens) {
     this.tokens = tokens;
@@ -254,7 +255,7 @@ class Parser {
 
     Expr expr = ternary();
 
-    while (match(TokenType.COMMA)) {
+    while (allowCommaOp && match(TokenType.COMMA)) {
       Token operator = previous();
       Expr right = ternary();
       expr = new Expr.Binary(expr, operator, right);
@@ -371,11 +372,13 @@ class Parser {
   private Expr finishCall(Expr callee) {
     List<Expr> arguments = new ArrayList<>();
     if (!check(TokenType.RIGHT_PAREN)) {
+      allowCommaOp = false;
       do {
         if (arguments.size() >= 255)
           error(peek(), "Can't have more than 255 arguments");
         arguments.add(expression());
-      } while (match(TokenType.COMMA));
+      } while (check(TokenType.COMMA) && advance() != null);
+      allowCommaOp = true;
     }
     Token paren = consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments");
     return new Expr.Call(callee, paren, arguments);
