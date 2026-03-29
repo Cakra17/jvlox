@@ -99,6 +99,8 @@ class Parser {
       return ifStatement();
     if (match(TokenType.PRINT))
       return printStatement();
+    if (match(TokenType.RETURN))
+      return returnStatement();
     if (match(TokenType.WHILE))
       return whileStatement();
     if (match(TokenType.BREAK))
@@ -198,6 +200,16 @@ class Parser {
     Expr expr = expression();
     consume(TokenType.SEMICOLON, "Expect ';' after value");
     return new Stmt.Print(expr);
+  }
+
+  private Stmt returnStatement() {
+    Token keyword = previous();
+    Expr value = null;
+    if (!check(TokenType.SEMICOLON))
+      value = expression();
+
+    consume(TokenType.SEMICOLON, "Expect ';' after return value");
+    return new Stmt.Return(keyword, value);
   }
 
   private Stmt expressionStatement() {
