@@ -91,6 +91,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                     return (String) left + String.format("%.0f", right);
                 else if (left instanceof Double && right instanceof String)
                     return String.format("%.0f", left) + (String) right;
+            case COMMA:
+                return right;
         }
 
         return null;
