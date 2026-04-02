@@ -4,6 +4,7 @@ import java.util.List;
 
 abstract class Expr {
   interface Visitor <T> {
+    T visitFunctionExpr(Function expr);
     T visitAssignExpr(Assign expr);
     T visitBinaryExpr(Binary expr);
     T visitGroupingExpr(Grouping expr);
@@ -15,6 +16,22 @@ abstract class Expr {
     T visitVariableExpr(Variable expr);
   }
 
+  static class Function extends Expr {
+    Function(Token name, List<Token> params, List<Stmt> body) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+
+    @Override
+    <T> T accept (Visitor<T> visitor) {
+      return visitor.visitFunctionExpr(this);
+    }
+
+    final Token name;
+    final List<Token> params;
+    final List<Stmt> body;
+  }
   static class Assign extends Expr {
     Assign(Token name, Expr value) {
       this.name = name;

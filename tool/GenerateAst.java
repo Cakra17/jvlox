@@ -15,6 +15,7 @@ public class GenerateAst {
     String outputDir = args[0];
     defineAst(outputDir, "Expr",
         Arrays.asList(
+            "Function : Token name, List<Token> params, List<Stmt> body", // lamda / anonymous function
             "Assign   : Token name, Expr value",
             "Binary   : Expr left, Token operator, Expr right",
             "Grouping : Expr expression",

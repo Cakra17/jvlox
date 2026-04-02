@@ -82,6 +82,30 @@ class Parser {
     return new Stmt.Function(name, parameters, body);
   }
 
+  private Expr.Function function() {
+    Token name = null;
+    if (check(TokenType.IDENTIFIER)) {
+      name = consume(TokenType.IDENTIFIER, "Expect name for function");
+    }
+    consume(TokenType.LEFT_PAREN, "Expect '(' for function.");
+    List<Token> parameters = new ArrayList<>();
+    if (!check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (parameters.size() >= 255) {
+          error(peek(), "Can't have more than 255 parameters.");
+        }
+
+        parameters.add(
+            consume(TokenType.IDENTIFIER, "Expect parameter name."));
+      } while (match(TokenType.COMMA));
+    }
+    consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+
+    consume(TokenType.LEFT_BRACE, "Expect '{' before anonymous function body.");
+    List<Stmt> body = block();
+    return new Expr.Function(name, parameters, body);
+  }
+
   private Stmt varDeclaration() {
     Token name = consume(TokenType.IDENTIFIER, "Expect variable name.");
     Expr expr = null;
@@ -405,6 +429,10 @@ class Parser {
 
     if (match(TokenType.NUMBER, TokenType.STRING)) {
       return new Expr.Literal(previous().literal);
+    }
+
+    if (match(TokenType.FUN)) {
+      return function();
     }
 
     if (match(TokenType.IDENTIFIER)) {
